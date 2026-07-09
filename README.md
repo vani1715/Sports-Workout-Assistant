@@ -1,12 +1,10 @@
-# 🏋️ FORMScope – AI-Based Workout Form Correction System
+# FORMScope – AI-Based Workout Form Correction System
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-Pose-orange)
 ![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green?logo=opencv)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Dashboard-black?logo=flask)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-Machine%20Learning-yellow?logo=scikitlearn)
 ![Status](https://img.shields.io/badge/Status-Completed-success)
-![License](https://img.shields.io/badge/License-MIT-brightgreen)
 
 ---
 
