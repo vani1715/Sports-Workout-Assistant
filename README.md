@@ -1,198 +1,240 @@
-# FORMScope — AI-Based Workout Form Correction System
+# 🏋️ FORMScope – AI-Based Workout Form Correction System
 
-**RV College of Engineering | Cluster: CS | ACY 2025-26**  
-
-
----
-
-## What it does
-
-FORMScope uses your webcam (or a pre-recorded video) and **MediaPipe Pose** to detect 33 body keypoints in real time. It calculates joint angles every frame, compares them against biomechanically correct ranges, and gives you:
-
-- **Instant visual feedback** on-screen (green = good, red = fix it)
-- **Audio cues via TTS** ("Hips sagging — engage your core.")
-- **Rep counting** with a progress ring
-- **Form score** broken down by Spine, Depth, Knee Tracking, Hip Position
-- **Session summary** printed at the end
-
-Supported exercises: **Squat · Push-up · Plank · Lunge**
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-Pose-orange)
+![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green?logo=opencv)
+![Flask](https://img.shields.io/badge/Flask-Web%20Dashboard-black?logo=flask)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Machine%20Learning-yellow?logo=scikitlearn)
+![Status](https://img.shields.io/badge/Status-Completed-success)
+![License](https://img.shields.io/badge/License-MIT-brightgreen)
 
 ---
 
-## Project Structure
+# 📌 Overview
+
+FORMScope is an AI-powered workout form correction system that performs **real-time human pose estimation** using a webcam and provides intelligent feedback to help users improve exercise technique.
+
+The system combines **Google MediaPipe Pose**, **OpenCV**, **Flask**, **Computer Vision**, and **Machine Learning** to analyze body posture, calculate biomechanical joint angles, count repetitions, evaluate exercise quality, and provide instant visual, audio, and dashboard-based feedback.
+
+Unlike traditional fitness trackers that only count repetitions, FORMScope focuses on **movement quality**, helping users perform exercises safely and efficiently.
+
+---
+
+# 🎯 Motivation
+
+Incorrect exercise posture is one of the leading causes of gym-related injuries and ineffective workouts.
+
+FORMScope aims to make professional-quality exercise guidance accessible to everyone by providing:
+
+- 🏋️ Real-time workout posture correction
+- 🎯 Biomechanical form analysis
+- 🔊 Instant voice feedback
+- 📊 Live exercise scoring
+- 💻 Browser-based monitoring dashboard
+- 🏠 Completely offline processing
+
+The project demonstrates how **Artificial Intelligence**, **Computer Vision**, and **Sports Biomechanics** can be combined to build an intelligent virtual fitness assistant.
+
+---
+
+# 📂 Project Structure
 
 ```
-formscope/
-├── main.py                  ← Entry point (run this)
-├── requirements.txt
-├── README.md
-│
-├── core/
-│   └── session.py           ← Main loop: video capture, MediaPipe, HUD, keys
+FORMScope/
 │
 ├── exercises/
-│   ├── base.py              ← Abstract BaseExercise + ExerciseState
-│   └── exercises.py         ← Squat, PushUp, Plank, Lunge + EXERCISE_REGISTRY
+│   ├── base.py
+│   ├── exercises.py
 │
-└── utils/
-    ├── angles.py            ← Joint angle math (angle_between, spine_angle, etc.)
-    ├── hud.py               ← All OpenCV drawing helpers (HUD, banners, gauges)
-    └── tts.py               ← Non-blocking TTS via daemon thread + priority queue
+├── utils/
+│   ├── angles.py
+│   ├── tts.py
+│   └── helpers.py
+│
+├── server/
+│   ├── app.py
+│   ├── templates/
+│   └── static/
+│
+├── models/
+│   └── knn_model.pkl
+│
+├── assets/
+│
+├── main.py
+├── requirements.txt
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## Setup
+# 🧠 Key Modules
 
-### 1. Create a virtual environment (recommended)
+### 📷 Pose Detection
 
-```bash
-python -m venv venv
-source venv/bin/activate        # macOS / Linux
-venv\Scripts\activate           # Windows
-```
-
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-> **Linux only:** if pyttsx3 fails, install `espeak`:
-> ```bash
-> sudo apt-get install espeak
-> ```
-
-> **macOS only:** pyttsx3 uses the built-in `NSSpeechSynthesizer` — no extras needed.
+- Captures live webcam feed
+- Detects 33 body landmarks using MediaPipe Pose
+- Tracks body movement in real time
+- Generates landmark coordinates for further analysis
 
 ---
 
-## Usage
+### 📐 Joint Angle Computation
 
-### Webcam (default)
-
-```bash
-python main.py
-```
-
-### Webcam with a specific exercise
-
-```bash
-python main.py --exercise pushup
-python main.py --exercise plank
-python main.py --exercise lunge
-```
-
-### Video file input
-
-```bash
-python main.py --source path/to/video.mp4
-```
-
-### Disable TTS (text only)
-
-```bash
-python main.py --no-tts
-```
-
-### Save annotated output
-
-```bash
-python main.py --save output.mp4
-```
-
-### All options combined
-
-```bash
-python main.py --source workout.mp4 --exercise squat --save result.mp4
-```
+- Calculates elbow angles
+- Computes knee angles
+- Hip angle estimation
+- Spine alignment analysis
+- Body posture assessment
+- Smooths angle values for stable predictions
 
 ---
 
-## Keyboard Controls
+### 🏋️ Exercise Analysis
 
-| Key | Action |
-|-----|--------|
-| `SPACE` | Pause / Resume |
-| `1` | Switch to Squat |
-| `2` | Switch to Push-up |
-| `3` | Switch to Plank |
-| `4` | Switch to Lunge |
-| `R` | Reset current rep count |
-| `S` | Save screenshot (PNG) |
-| `Q` / `ESC` | Quit |
+Implements dedicated biomechanical models for:
 
----
+- Squats
+- Push-Ups
+- Planks
+- Lunges
+- Bicep Curls
 
-## How It Works
+Each exercise contains:
 
-### Pose Estimation — MediaPipe
-MediaPipe Pose returns 33 normalised 3D landmarks at ~30 fps. FORMScope uses 16 of these (shoulders, elbows, wrists, hips, knees, ankles, heels).
-
-### Angle Computation (`utils/angles.py`)
-Every landmark is a point `(x, y)` in [0,1] space. The angle at joint **B** between vectors **BA** and **BC** is:
-
-```
-θ = arccos( (BA · BC) / (|BA| × |BC|) )
-```
-
-A 5-frame **exponential moving average** smooths noisy measurements before they reach the form-checker.
-
-### Form Checking (`exercises/exercises.py`)
-Each exercise defines acceptable angle ranges per joint, e.g. for Squat:
-
-| Joint | Good Range |
-|-------|-----------|
-| Knee angle | 60° – 175° |
-| Hip angle | 65° – 175° |
-| Spine lean | 0° – 15° |
-
-The form-checker scores each metric 0–100 and returns a weighted average as the **Form Score**.
-
-### Rep Counting
-A simple 2-state machine:
-- **`up`** → when the primary angle crosses below the threshold → `down`
-- **`down`** → when the angle recovers above return threshold → `up` → **rep counted**
-
-Plank uses a time-based tick (1 rep = 1 second held with acceptable form).
-
-### TTS (`utils/tts.py`)
-pyttsx3 runs on a **daemon thread** with a priority queue. The video loop enqueues messages non-blockingly — TTS never stalls frame rendering. A 4-second cooldown prevents the same phrase from repeating.
+- Form validation
+- Repetition counting
+- Joint-specific scoring
+- Personalized feedback
 
 ---
 
-## Adding a New Exercise
+### 🤖 Machine Learning Module
 
-1. Subclass `BaseExercise` in `exercises/exercises.py`
-2. Define `NAME`, `GOAL_REPS`, `JOINTS`, `ANGLE_RANGES`, `PRIMARY_CONNECTIONS`, `PRIMARY_JOINTS`
-3. Implement `_compute_angles`, `_check_form`, `_check_rep`
-4. Add it to `EXERCISE_REGISTRY` and `EXERCISE_KEYS`
+Uses a **K-Nearest Neighbour (KNN)** classifier to detect improper torso leaning during **Bicep Curl** exercises.
 
-That's it — the session, HUD, and TTS will all pick it up automatically.
+The model:
 
----
-
-## Troubleshooting
-
-**`ModuleNotFoundError: mediapipe`**  
-Run `pip install mediapipe` or reinstall via `pip install -r requirements.txt`
-
-**Camera not opening**  
-Try `--source 1` (some machines index the webcam as 1, not 0).
-
-**pyttsx3 silent on Linux**  
-Install espeak: `sudo apt-get install espeak libespeak-dev`
-
-**Slow performance**  
-Set `model_complexity=0` in `core/session.py` → `self._pose_config` for the lite model.
+- Extracts pose-based features
+- Normalizes landmark coordinates
+- Classifies correct and incorrect posture
+- Achieves over **94% classification accuracy**
 
 ---
 
-## Dependencies
+### 🌐 Dashboard
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| mediapipe | ≥ 0.10.9 | Pose estimation |
-| opencv-python | ≥ 4.9.0 | Video capture + rendering |
-| pyttsx3 | ≥ 2.90 | Offline TTS |
-| numpy | ≥ 1.24.0 | Array math |
+Provides a real-time web interface built using Flask.
+
+Features include:
+
+- Live video stream
+- Current exercise
+- Form score
+- Repetition count
+- Feedback messages
+- Session controls
+- Exercise switching
+
+---
+
+### 🔊 Voice Feedback
+
+Uses **pyttsx3** to generate offline speech.
+
+The voice engine runs on a dedicated thread, allowing:
+
+- Non-blocking execution
+- Continuous real-time feedback
+- Smooth video processing
+
+---
+
+# 🏋️ Supported Exercises
+
+- ✅ Squat
+- ✅ Push-Up
+- ✅ Plank
+- ✅ Lunge
+- ✅ Bicep Curl
+
+---
+
+# ⚙️ Technologies Used
+
+### Programming Language
+
+- Python
+
+### Computer Vision
+
+- OpenCV
+- MediaPipe Pose
+
+### Machine Learning
+
+- Scikit-learn
+- K-Nearest Neighbour (KNN)
+
+### Backend
+
+- Flask
+- Flask-Sock (WebSocket)
+
+### Audio
+
+- pyttsx3
+
+### Scientific Computing
+
+- NumPy
+
+---
+
+# 🚀 Features
+
+- Real-time pose estimation
+- Joint angle calculation
+- Exercise repetition counting
+- Biomechanical posture analysis
+- AI-based form correction
+- Voice-assisted coaching
+- Live web dashboard
+- Offline processing
+- CPU-only execution
+- Extensible modular architecture
+
+---
+
+# 📈 Performance
+
+- **33 body landmarks tracked**
+- **Real-time processing (~30 FPS)**
+- **~11.5 ms average processing latency**
+- **CPU-only execution**
+- **94.3% KNN posture classification accuracy**
+- **Offline operation (No cloud dependency)**
+
+---
+
+# 🔮 Future Improvements
+
+- Mobile application
+- User authentication
+- Workout history tracking
+- Progress analytics
+- Cloud synchronization
+- Additional exercise support
+- Deep Learning posture classification
+- Personalized workout recommendations
+- Multi-camera pose estimation
+- 3D body pose analysis
+
+---
+
+# ⚖️ Disclaimer & Ownership
+
+This project is an original academic work developed by Shreyas Sahoo along with contributing team members as part of coursework and learning in Sports & Athletics.
+
+This project is intended strictly for educational and academic use. Unauthorized commercial use, redistribution without proper credit, or plagiarism of this work—either in full or in part—is not permitted. The authors assume no responsibility for any misuse of this project or its outcomes. If this project is referenced, reused, or built upon, clear and proper attribution to the authors and team members is mandatory. 
