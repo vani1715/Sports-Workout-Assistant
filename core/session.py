@@ -89,7 +89,7 @@ class WorkoutSession:
         self._plank_last_tick = time.time()
 
         if self.show_window:
-            cv2.namedWindow("FORMScope — debug", cv2.WINDOW_NORMAL)
+            cv2.namedWindow("KinetiQ — debug", cv2.WINDOW_NORMAL)
 
         with self._mp_pose.Pose(**self._pose_config) as pose:
             while self._running:
@@ -156,7 +156,7 @@ class WorkoutSession:
                         self.store.push_frame(buf.tobytes())
 
                 if self.show_window:
-                    cv2.imshow("FORMScope — debug", annotated)
+                    cv2.imshow("KinetiQ — debug", annotated)
 
                 if self._writer:
                     self._writer.write(annotated)
@@ -316,7 +316,7 @@ class WorkoutSession:
             self._exercise.reset_reps()
         elif key == ord("s"):
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            cv2.imwrite(f"formscope_{ts}.jpg", frame)
+            cv2.imwrite(f"kinetiQ_{ts}.jpg", frame)
         elif key in [ord(str(d)) for d in range(1, 5)]:
             new_ex = EXERCISE_KEYS.get(chr(key))
             if new_ex and new_ex != self._exercise_key:
